@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Supervise or Transfer?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,650&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one working column — question, chart + verdict, then the dials grouped by what they describe. */
+:root {
+  --bg: #f6f7f8;
+  --panel: #ffffff;
+  --ink: #1d232b;
+  --muted: #5b6673;
+  --rule: #d9dee4;
+  --s: #1f7a6a;   /* supervised contact */
+  --u: #b07a12;   /* unsupervised / shared */
+  --t: #b2442f;   /* transfer */
+  --focus: #2f5fa8;
+  --chip-ok-bg: #e3f1ed; --chip-ok-fg: #155a4d;
+  --chip-no-bg: #f7e5e0; --chip-no-fg: #8a2f1e;
+  --display: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14181d; --panel: #1c2128; --ink: #e6e9ed; --muted: #9aa5b1; --rule: #2e353f;
+    --s: #4fbfa7; --u: #e0a83a; --t: #e8735c; --focus: #7fa6e6;
+    --chip-ok-bg: #173a33; --chip-ok-fg: #8fe0cd; --chip-no-bg: #42211b; --chip-no-fg: #f4a898;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14181d; --panel: #1c2128; --ink: #e6e9ed; --muted: #9aa5b1; --rule: #2e353f;
+  --s: #4fbfa7; --u: #e0a83a; --t: #e8735c; --focus: #7fa6e6;
+  --chip-ok-bg: #173a33; --chip-ok-fg: #8fe0cd; --chip-no-bg: #42211b; --chip-no-fg: #f4a898;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 28px; }
+header { display: grid; gap: 10px; max-width: 70ch; }
+.eyebrow { font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+h1 { font-family: var(--display); font-weight: 650; font-size: clamp(30px, 5vw, 44px); line-height: 1.1; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 650; font-size: 21px; margin: 0; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); }
+header p strong { color: var(--ink); font-weight: 600; }
+a { color: var(--focus); }
+
+.main { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 820px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 18px; min-width: 0; }
+
+.chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; align-items: baseline; margin-bottom: 6px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 18px; height: 3px; border-radius: 2px; display: inline-block; }
+svg { width: 100%; height: auto; display: block; }
+svg text { font-family: var(--mono); font-size: 11px; fill: var(--muted); }
+.axis-title { font-family: var(--body); font-size: 12px; fill: var(--muted); }
+
+.verdict { display: grid; gap: 14px; }
+.verdict .lead { font-family: var(--display); font-size: 20px; line-height: 1.3; margin: 0; text-wrap: balance; }
+.rank { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.rank li { display: grid; grid-template-columns: 12px 1fr auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--rule); }
+.rank li.best { border-color: currentColor; }
+.rank .dot { width: 12px; height: 12px; border-radius: 50%; }
+.rank .name { color: var(--ink); font-size: 14px; }
+.rank .val { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 14px; color: var(--ink); }
+.chip { display: inline-block; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+.chip.ok { background: var(--chip-ok-bg); color: var(--chip-ok-fg); }
+.chip.no { background: var(--chip-no-bg); color: var(--chip-no-fg); }
+.facts { display: grid; gap: 10px; font-size: 14px; color: var(--muted); margin: 0; }
+.facts b { color: var(--ink); font-weight: 600; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+.controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 900px) { .controls { grid-template-columns: minmax(0, 1fr); } }
+fieldset { border: 1px solid var(--rule); border-radius: 10px; padding: 16px; margin: 0; display: grid; gap: 16px; background: var(--panel); min-width: 0; }
+legend { font-family: var(--display); font-weight: 650; font-size: 17px; padding: 0 6px; }
+.ctl { display: grid; gap: 4px; }
+.ctl-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.ctl label { font-size: 14px; font-weight: 500; }
+.ctl output { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 14px; }
+.ctl small { color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+input[type=range] { width: 100%; accent-color: var(--focus); }
+input[type=range]:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.sym { font-family: var(--mono); color: var(--muted); font-size: 12px; font-weight: 400; }
+.highlight { border-color: var(--t); }
+
+.notes { display: grid; gap: 10px; max-width: 72ch; font-size: 14px; color: var(--muted); }
+.notes p { margin: 0; }
+.formula { font-family: var(--mono); font-size: 13px; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 12px; overflow-x: auto; white-space: pre; }
+button.reset { font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); cursor: pointer; justify-self: start; }
+button.reset:hover { border-color: var(--muted); }
+button.reset:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) { .rank li { transition: border-color .2s; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Decision under uncertainty · family court</div>
+    <h1>Supervise or transfer?</h1>
+    <p>A mother reports that the father has harmed the child. The court usually cannot establish whether it happened. This calculator compares the court's three options by expected harm to the child, and shows that <strong>keeping the child with the mother and supervising contact beats transfer to the father at every probability of abuse</strong>, as long as supervision lowers the child's exposure and costs less than separation.</p>
+    <p>All harms are measured in one unit: the harm of separating a child from the primary caregiver. The default values are illustrative, not estimates.</p>
+  </header>
+
+  <div class="main">
+    <section class="panel" aria-labelledby="chart-title">
+      <div class="chart-head">
+        <h2 id="chart-title">Expected harm by probability of abuse</h2>
+        <div class="legend" aria-hidden="true">
+          <span><i style="background:var(--s)"></i>Supervised contact</span>
+          <span><i style="background:var(--u)"></i>Unsupervised / shared</span>
+          <span><i style="background:var(--t)"></i>Transfer to father</span>
+        </div>
+      </div>
+      <svg id="chart" viewBox="0 0 640 380" role="img" aria-label="Line chart of expected harm for each option as the probability of abuse goes from 0 to 100 percent"></svg>
+    </section>
+
+    <section class="panel verdict" aria-live="polite">
+      <div><span id="domChip" class="chip ok">Supervision dominates transfer</span></div>
+      <p class="lead" id="lead"></p>
+      <ul class="rank" id="rank"></ul>
+      <div class="facts">
+        <p id="factU"></p>
+        <p id="factT"></p>
+      </div>
+    </section>
+  </div>
+
+  <div class="controls">
+    <fieldset>
+      <legend>The allegation</legend>
+      <div class="ctl">
+        <div class="ctl-top"><label for="p">Probability the abuse happened <span class="sym">p</span></label><output id="p_o" for="p"></output></div>
+        <input type="range" id="p" min="0" max="1" step="0.01">
+        <small>Move this to see the ranking hold or change. The court does not need to know it.</small>
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><label for="h">Severity of abuse <span class="sym">h</span></label><output id="h_o" for="h"></output></div>
+        <input type="range" id="h" min="1" max="30" step="1">
+        <small>Harm of abuse if fully exposed, in separation units. 10 means ten times as harmful as losing the primary caregiver.</small>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>What each option does</legend>
+      <div class="ctl">
+        <div class="ctl-top"><label for="eS">Exposure under supervised contact <span class="sym">e(S)</span></label><output id="eS_o" for="eS"></output></div>
+        <input type="range" id="eS" min="0" max="1" step="0.05">
+        <small>Share of the abuse risk that still reaches the child with a supervisor present.</small>
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><label for="eU">Exposure under unsupervised contact <span class="sym">e(U)</span></label><output id="eU_o" for="eU"></output></div>
+        <input type="range" id="eU" min="0" max="1" step="0.05">
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><label for="eT">Exposure after transfer <span class="sym">e(T)</span></label><output id="eT_o" for="eT"></output></div>
+        <input type="range" id="eT" min="0" max="1" step="0.05">
+        <small>The child lives with the accused parent, so this is usually the highest.</small>
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><label for="b">Burden of supervision <span class="sym">b</span></label><output id="b_o" for="b"></output></div>
+        <input type="range" id="b" min="0" max="1.5" step="0.01">
+        <small>Cost to the father–child relationship of supervised rather than free contact, in separation units.</small>
+      </div>
+    </fieldset>
+
+    <fieldset id="motherSet">
+      <legend>Independent evidence about the mother</legend>
+      <div class="ctl">
+        <div class="ctl-top"><label for="q">Probability the mother endangers the child <span class="sym">q</span></label><output id="q_o" for="q"></output></div>
+        <input type="range" id="q" min="0" max="1" step="0.01">
+        <small>Only independent evidence counts here. Her abuse report is not such evidence: it is what a protective parent would do if the abuse happened.</small>
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><label for="hm">Severity of that risk <span class="sym">h<sub>m</sub></span></label><output id="hm_o" for="hm"></output></div>
+        <input type="range" id="hm" min="1" max="30" step="1">
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><label for="gm">Share of that risk removed by transfer <span class="sym">Δe<sub>m</sub></span></label><output id="gm_o" for="gm"></output></div>
+        <input type="range" id="gm" min="0" max="1" step="0.05">
+      </div>
+      <button type="button" class="reset" id="reset">Reset to the paper's central values</button>
+    </fieldset>
+  </div>
+
+  <section class="notes" aria-labelledby="model-title">
+    <h2 id="model-title">The model</h2>
+    <p>Expected harm to the child under each option, in units of the harm of separation (σ = 1):</p>
+    <div class="formula">Supervised contact   E[H|S] = b     + p·h·e(S) + q·hₘ
+Unsupervised/shared  E[H|U] =         p·h·e(U) + q·hₘ
+Transfer to father   E[H|T] = σ     + p·h·e(T) + q·hₘ·(1 − Δeₘ)</div>
+    <p>With no independent evidence against the mother (q = 0), transfer minus supervision is (σ − b) + p·h·(e(T) − e(S)). That is positive at every p whenever σ &gt; b and e(T) ≥ e(S), so supervision wins without anyone estimating how often mothers' reports are true.</p>
+    <p>Companion to Vera Wilde, <a href="https://github.com/verawilde/custody-decisions-under-uncertainty/releases/tag/v1.0">“Mothers' Abuse Reports Under Uncertainty: Why Custody Courts' Default Response Fails the Child”</a> (preprint, under peer review). The <a href="https://github.com/verawilde/custody-decisions-under-uncertainty">sensitivity analysis code</a> reproduces the paper's tables.</p>
+  </section>
+</div>
+
+<script>
+(function () {
+  var DEFAULTS = { p: 0.2, h: 10, eS: 0.1, eU: 0.4, eT: 0.9, b: 0.1, q: 0, hm: 10, gm: 0.9 };
+  var SIGMA = 1;
+  var ids = Object.keys(DEFAULTS);
+  var el = {}; ids.forEach(function (k) { el[k] = document.getElementById(k); });
+  var NAMES = { S: "Supervised contact", U: "Unsupervised / shared", T: "Transfer to father" };
+  var COLORS = { S: "var(--s)", U: "var(--u)", T: "var(--t)" };
+
+  function pct(x) { return Math.round(x * 100) + "%"; }
+  function fmt(x) { return (Math.abs(x) >= 10 ? x.toFixed(1) : x.toFixed(2)); }
+
+  function read() { var P = {}; ids.forEach(function (k) { P[k] = parseFloat(el[k].value); }); return P; }
+  function harms(p, P) {
+    var mother = P.q * P.hm;
+    return {
+      S: P.b + p * P.h * P.eS + mother,
+      U: p * P.h * P.eU + mother,
+      T: SIGMA + p * P.h * P.eT + mother * (1 - P.gm)
+    };
+  }
+
+  function niceStep(range) {
+    var raw = range / 5, mag = Math.pow(10, Math.floor(Math.log10(raw))), n = raw / mag;
+    return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * mag;
+  }
+
+  function draw(P) {
+    var svg = document.getElementById("chart");
+    var W = 640, H = 380, m = { l: 52, r: 18, t: 14, b: 48 };
+    var iw = W - m.l - m.r, ih = H - m.t - m.b;
+    var N = 60, pts = { S: [], U: [], T: [] }, ymax = 0;
+    for (var i = 0; i <= N; i++) {
+      var p = i / N, hz = harms(p, P);
+      ["S", "U", "T"].forEach(function (k) { pts[k].push([p, hz[k]]); if (hz[k] > ymax) ymax = hz[k]; });
+    }
+    var step = niceStep(ymax || 1), top = Math.ceil((ymax || 1) / step) * step;
+    function X(p) { return m.l + p * iw; }
+    function Y(v) { return m.t + ih - (v / top) * ih; }
+    var s = "";
+    for (var v = 0; v <= top + 1e-9; v += step) {
+      s += '<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="var(--rule)" stroke-width="1"/>';
+      s += '<text x="' + (m.l - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + (+v.toFixed(2)) + '</text>';
+    }
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (p) {
+      s += '<text x="' + X(p) + '" y="' + (H - m.b + 18) + '" text-anchor="middle">' + pct(p) + '</text>';
+    });
+    s += '<text class="axis-title" x="' + (m.l + iw / 2) + '" y="' + (H - 8) + '" text-anchor="middle">Probability the abuse happened (p)</text>';
+    s += '<text class="axis-title" transform="translate(14 ' + (m.t + ih / 2) + ') rotate(-90)" text-anchor="middle">Expected harm (σ units)</text>';
+    s += '<line x1="' + X(P.p) + '" x2="' + X(P.p) + '" y1="' + m.t + '" y2="' + (m.t + ih) + '" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4 4"/>';
+    ["U", "T", "S"].forEach(function (k) {
+      var d = pts[k].map(function (pt, j) { return (j ? "L" : "M") + X(pt[0]).toFixed(1) + " " + Y(pt[1]).toFixed(1); }).join(" ");
+      s += '<path d="' + d + '" fill="none" stroke="' + COLORS[k] + '" stroke-width="' + (k === "S" ? 3 : 2.25) + '" stroke-linejoin="round"/>';
+    });
+    var cur = harms(P.p, P);
+    ["U", "T", "S"].forEach(function (k) {
+      s += '<circle cx="' + X(P.p) + '" cy="' + Y(cur[k]) + '" r="4.5" fill="' + COLORS[k] + '" stroke="var(--panel)" stroke-width="2"/>';
+    });
+    svg.innerHTML = s;
+  }
+
+  function update() {
+    var P = read();
+    document.getElementById("p_o").textContent = pct(P.p);
+    document.getElementById("h_o").textContent = P.h + "×";
+    document.getElementById("eS_o").textContent = pct(P.eS);
+    document.getElementById("eU_o").textContent = pct(P.eU);
+    document.getElementById("eT_o").textContent = pct(P.eT);
+    document.getElementById("b_o").textContent = P.b.toFixed(2);
+    document.getElementById("q_o").textContent = pct(P.q);
+    document.getElementById("hm_o").textContent = P.hm + "×";
+    document.getElementById("gm_o").textContent = pct(P.gm);
+
+    draw(P);
+    var hz = harms(P.p, P);
+    var order = ["S", "U", "T"].sort(function (a, b) { return hz[a] - hz[b]; });
+    document.getElementById("rank").innerHTML = order.map(function (k, i) {
+      return '<li class="' + (i === 0 ? "best" : "") + '" style="color:' + COLORS[k] + '"><span class="dot" style="background:' + COLORS[k] + '"></span><span class="name">' + NAMES[k] + '</span><span class="val">' + fmt(hz[k]) + '</span></li>';
+    }).join("");
+    document.getElementById("lead").textContent = "At p = " + pct(P.p) + ", the least harmful option is " + NAMES[order[0]].toLowerCase() + ".";
+
+    var dominates = SIGMA > P.b && P.eT >= P.eS && P.q === 0;
+    var chip = document.getElementById("domChip");
+    if (P.q > 0) {
+      chip.className = "chip no"; chip.textContent = "Independent evidence against the mother entered";
+    } else if (dominates) {
+      chip.className = "chip ok"; chip.textContent = "Supervision beats transfer at every p";
+    } else {
+      chip.className = "chip no"; chip.textContent = SIGMA <= P.b ? "Supervision costs as much as separation" : "Transfer exposes the child less than supervision";
+    }
+    document.getElementById("motherSet").classList.toggle("highlight", P.q > 0);
+
+    var gapU = P.eU - P.eS, factU = document.getElementById("factU");
+    if (gapU <= 0) {
+      factU.innerHTML = "Unsupervised contact exposes the child no more than supervision here, so it wins on burden alone.";
+    } else {
+      var th = P.b / (P.h * gapU);
+      factU.innerHTML = th >= 1
+        ? "Unsupervised contact beats supervision at every p with these values."
+        : "Supervision beats unsupervised contact once the probability of abuse exceeds <b>" + (th * 100).toFixed(1) + "%</b>.";
+    }
+    var need = ((SIGMA - P.b) + P.p * P.h * (P.eT - P.eS)) / (P.hm * P.gm);
+    var factT = document.getElementById("factT");
+    if (P.gm === 0) {
+      factT.innerHTML = "Transfer removes none of any risk from the mother here, so it can never win on that ground.";
+    } else if (need > 1) {
+      factT.innerHTML = "For transfer to beat supervision at this p, independent evidence would have to put the risk from the mother above 100%. <b>It cannot win.</b>";
+    } else if (need <= 0) {
+      factT.innerHTML = "With these values transfer beats supervision even without evidence against the mother.";
+    } else {
+      factT.innerHTML = "For transfer to beat supervision at this p, independent evidence would have to put the risk from the mother at <b>" + (need * 100).toFixed(1) + "%</b> or more.";
+    }
+  }
+
+  function setAll(vals) { ids.forEach(function (k) { el[k].value = vals[k]; }); update(); }
+  ids.forEach(function (k) { el[k].addEventListener("input", update); });
+  document.getElementById("reset").addEventListener("click", function () { setAll(DEFAULTS); });
+  setAll(DEFAULTS);
+})();
+</script>
+</body>
+</html>

@@ -8,10 +8,15 @@ The article treats a family court's response to a mother's abuse report as a dec
 
 | File | What it is |
 |---|---|
-| `preprint.pdf` | Preprint of the manuscript (not yet peer reviewed) |
+| `10-23-26_Mothers_Abuse_Reports_Preprint.pdf` | Preprint of the manuscript (not yet peer reviewed) |
+| `index.html` | Interactive decision calculator ([open it here](https://verawilde.github.io/custody-decisions-under-uncertainty/)) |
 | `sensitivity_analysis.py` | Code for the sensitivity analysis (Tables 2 and 3) |
 | `CITATION.cff` | Citation metadata |
 | `LICENSE` | MIT license for the code; the preprint text is CC BY 4.0 |
+
+## Decision calculator
+
+[Supervise or Transfer?](https://verawilde.github.io/custody-decisions-under-uncertainty/) lets you set the probability of abuse, its severity, how much each option exposes the child, and the burden of supervision, and shows the expected harm of supervised contact, unsupervised contact and transfer across every probability of abuse. It uses the same model as the sensitivity analysis.
 
 ## Reproducing Tables 2 and 3
 
