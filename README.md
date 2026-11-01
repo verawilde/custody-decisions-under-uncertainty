@@ -30,7 +30,7 @@ All harms are expressed in units of the harm of separating a child from the prim
 
 ## Status
 
-Submitted for peer review. Preprint on PsyArXiv: link to follow.
+Submitted for peer review. A revised version is in preparation; the preprint here is the 23 October 2026 version. Preprint on PsyArXiv: link to follow.
 
 ## Citation
 
