@@ -1,6 +1,6 @@
 # Mothers' Abuse Reports Under Uncertainty
 
-Materials for the article **"Mothers' Abuse Reports Under Uncertainty: Why Custody Courts' Default Response Fails the Child"** by Vera Wilde (Technical University of Munich, TUM Campus Heilbronn).
+Materials for the article **"Mothers' Abuse Reports Under Uncertainty: A Decision Analysis of Custody Responses to Abuse Allegations"** by Vera Wilde (Technical University of Munich, TUM Campus Heilbronn).
 
 The article treats a family court's response to a mother's abuse report as a decision under uncertainty. It shows that keeping the child with the primary caregiver under supervised contact dominates transfer to the accused parent for any probability of abuse, and that transfer can be preferred only on independent evidence that the mother herself endangers the child.
 
@@ -30,7 +30,7 @@ All harms are expressed in units of the harm of separating a child from the prim
 
 ## Status
 
-Submitted for peer review. A revised version is in preparation; the preprint here is the 23 October 2026 version. Preprint on PsyArXiv: link to follow.
+Under peer review in a revised version. The preprint here is the 23 October 2026 version, posted under an earlier subtitle. Preprint on PsyArXiv: link to follow.
 
 ## Citation
 
